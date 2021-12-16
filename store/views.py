@@ -7,6 +7,7 @@ from carts.views import _cart_id
 from django.core.paginator import Paginator
 from .forms import ReviewRatingForm
 from django.contrib import messages
+from orders.models import OrderProduct
 
 # Create your views here.
 
@@ -46,9 +47,21 @@ def product_detail(request, category_slug, product_slug):
         cart_item = CartItem.objects.filter(cart=cart, product=single_product).exists()
     except Exception as e:
         raise e
+    if request.user.is_authenticated:
+        try:
+            orderproduct = OrderProduct.objects.filter(user=request.user, product_id=single_product.id).exists()
+        except OrderProduct.DoesNotExist:
+            orderproduct = None
+
+    else:
+        orderproduct = None
+    reviews = ReviewRating.objects.filter(product_id=single_product.id)
+
     data={
         'single_product': single_product,
-        'cart_item': cart_item
+        'cart_item': cart_item,
+        'orderproduct': orderproduct,
+        'reviews': reviews
     }
     return render(request, 'store/product_detail.html', context=data)
 
